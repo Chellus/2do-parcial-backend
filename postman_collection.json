@@ -1,0 +1,417 @@
+{
+  "info": {
+    "name": "Estacionamiento Tarifado",
+    "description": "Colección para probar la API REST del sistema de estacionamiento tarifado.\n\nBase URL por defecto: http://localhost:8000",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "calle_id",
+      "value": ""
+    },
+    {
+      "key": "espacio_id",
+      "value": ""
+    },
+    {
+      "key": "ocupacion_id",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Calles",
+      "description": "CRUD de calles",
+      "item": [
+        {
+          "name": "Alta calle",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('calle_id', json.id);",
+                  "pm.environment.set('calle_id', json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Av. Corrientes\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/calles",
+              "host": ["{{base_url}}"],
+              "path": ["calles"]
+            }
+          }
+        },
+        {
+          "name": "Listar calles",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/calles",
+              "host": ["{{base_url}}"],
+              "path": ["calles"]
+            }
+          }
+        },
+        {
+          "name": "Buscar calle por nombre",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/calles?nombre=Corrientes",
+              "host": ["{{base_url}}"],
+              "path": ["calles"],
+              "query": [
+                {
+                  "key": "nombre",
+                  "value": "Corrientes"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener calle por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/calles/{{calle_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["calles", "{{calle_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar calle",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Av. Corrientes (actualizada)\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/calles/{{calle_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["calles", "{{calle_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Espacios",
+      "description": "CRUD de espacios de estacionamiento",
+      "item": [
+        {
+          "name": "Alta espacio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('espacio_id', json.id);",
+                  "pm.environment.set('espacio_id', json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": 10,\n  \"calle_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/espacios",
+              "host": ["{{base_url}}"],
+              "path": ["espacios"]
+            }
+          }
+        },
+        {
+          "name": "Listar espacios",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/espacios",
+              "host": ["{{base_url}}"],
+              "path": ["espacios"]
+            }
+          }
+        },
+        {
+          "name": "Buscar espacios por calle",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/espacios?calle=Corrientes",
+              "host": ["{{base_url}}"],
+              "path": ["espacios"],
+              "query": [
+                {
+                  "key": "calle",
+                  "value": "Corrientes"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener espacio por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/espacios/{{espacio_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["espacios", "{{espacio_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar espacio (inhabilitar)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"inhabilitado\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/espacios/{{espacio_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["espacios", "{{espacio_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ocupaciones",
+      "description": "Gestión de ocupaciones (reservas)",
+      "item": [
+        {
+          "name": "Registrar ocupación",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('ocupacion_id', json.id);",
+                  "pm.environment.set('ocupacion_id', json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"calle\": \"Av. Corrientes\",\n  \"numero_espacio\": 1,\n  \"chapa\": \"ABC123\",\n  \"inicio_reserva\": \"2026-05-25T14:00:00\",\n  \"duracion_prevista_hs\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/ocupaciones",
+              "host": ["{{base_url}}"],
+              "path": ["ocupaciones"]
+            }
+          }
+        },
+        {
+          "name": "Listar ocupaciones",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/ocupaciones",
+              "host": ["{{base_url}}"],
+              "path": ["ocupaciones"]
+            }
+          }
+        },
+        {
+          "name": "Filtrar ocupaciones por chapa",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/ocupaciones?chapa=ABC123",
+              "host": ["{{base_url}}"],
+              "path": ["ocupaciones"],
+              "query": [
+                {
+                  "key": "chapa",
+                  "value": "ABC123"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filtrar ocupaciones por calle",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/ocupaciones?calle=San Martín",
+              "host": ["{{base_url}}"],
+              "path": ["ocupaciones"],
+              "query": [
+                {
+                  "key": "calle",
+                  "value": "San Martín"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filtrar ocupaciones por chapa + calle",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/ocupaciones?chapa=ABC123&calle=Corrientes",
+              "host": ["{{base_url}}"],
+              "path": ["ocupaciones"],
+              "query": [
+                {
+                  "key": "chapa",
+                  "value": "ABC123"
+                },
+                {
+                  "key": "calle",
+                  "value": "Corrientes"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener ocupación por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/ocupaciones/{{ocupacion_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["ocupaciones", "{{ocupacion_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Finalizar ocupación",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fin_real\": \"2026-05-25T16:30:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/ocupaciones/{{ocupacion_id}}/finalizar",
+              "host": ["{{base_url}}"],
+              "path": ["ocupaciones", "{{ocupacion_id}}", "finalizar"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Disponibilidad",
+      "description": "Consulta de espacios disponibles en un rango horario",
+      "item": [
+        {
+          "name": "Disponibles en rango",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/disponibilidad?desde=2026-05-25T08:00:00&hasta=2026-05-25T10:00:00",
+              "host": ["{{base_url}}"],
+              "path": ["disponibilidad"],
+              "query": [
+                {
+                  "key": "desde",
+                  "value": "2026-05-25T08:00:00"
+                },
+                {
+                  "key": "hasta",
+                  "value": "2026-05-25T10:00:00"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Disponibles en rango + calle",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/disponibilidad?desde=2026-05-25T08:00:00&hasta=2026-05-25T10:00:00&calle=Corrientes",
+              "host": ["{{base_url}}"],
+              "path": ["disponibilidad"],
+              "query": [
+                {
+                  "key": "desde",
+                  "value": "2026-05-25T08:00:00"
+                },
+                {
+                  "key": "hasta",
+                  "value": "2026-05-25T10:00:00"
+                },
+                {
+                  "key": "calle",
+                  "value": "Corrientes"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
+from app.models.models import EstadoEspacio
 from app.schemas.schemas import EspacioCreate, EspacioUpdate, EspacioOut
 from app.services import services
 
@@ -14,8 +15,12 @@ def crear_espacio(data: EspacioCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/", response_model=list[EspacioOut])
-def listar_espacios(db: Session = Depends(get_db)):
-    return services.obtener_espacios(db)
+def listar_espacios(
+    calle: str | None = Query(default=None, description="Filtrar por nombre de calle"),
+    estado: EstadoEspacio | None = Query(default=None, description="Filtrar por estado (disponible, ocupado, inhabilitado)"),
+    db: Session = Depends(get_db),
+):
+    return services.obtener_espacios(db, calle, estado)
 
 
 @router.get("/{espacio_id}", response_model=EspacioOut)

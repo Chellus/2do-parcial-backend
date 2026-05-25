@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, contains_eager
 from sqlalchemy import func
 
 from app.models.models import Calle, Espacio, Ocupacion, EstadoEspacio
@@ -20,8 +20,11 @@ def crear_calle(db: Session, data: CalleCreate) -> Calle:
     db.refresh(calle)
     return calle
 
-def obtener_calles(db: Session) -> list[Calle]:
-    return db.query(Calle).all()
+def obtener_calles(db: Session, nombre: str | None = None) -> list[Calle]:
+    query = db.query(Calle)
+    if nombre:
+        query = query.filter(Calle.nombre.ilike(f"%{nombre}%"))
+    return query.all()
 
 def obtener_calle(db: Session, calle_id: int) -> Calle:
     calle = db.query(Calle).filter(Calle.id == calle_id).first()
@@ -51,8 +54,13 @@ def crear_espacio(db: Session, data: EspacioCreate) -> Espacio:
     db.refresh(espacio)
     return espacio
 
-def obtener_espacios(db: Session) -> list[Espacio]:
-    return db.query(Espacio).all()
+def obtener_espacios(db: Session, calle: str | None = None, estado: EstadoEspacio | None = None) -> list[Espacio]:
+    query = db.query(Espacio)
+    if calle:
+        query = query.join(Espacio.calle).filter(Calle.nombre.ilike(f"%{calle}%"))
+    if estado:
+        query = query.filter(Espacio.estado == estado)
+    return query.all()
 
 
 def obtener_espacio(db: Session, espacio_id: int) -> Espacio:
@@ -78,6 +86,11 @@ def actualizar_espacio(db: Session, espacio_id: int, data: EspacioUpdate) -> Esp
     db.commit()
     db.refresh(espacio)
     return espacio
+
+def _poblar_calle_numero(oc: Ocupacion) -> None:
+    oc.calle = oc.espacio.calle.nombre
+    oc.numero = oc.espacio.numero
+
 
 def _hay_conflicto(db: Session, espacio_id: int, inicio: datetime, fin: datetime) -> bool:
     """Verifica si un espacio tiene ocupaciones activas que se solapan con el rango dado."""
@@ -105,11 +118,18 @@ def registrar_ocupacion(db: Session, data: OcupacionCreate) -> Ocupacion:
     if _hay_conflicto(db, espacio.id, data.inicio_reserva, fin_previsto):
         raise HTTPException(status_code=409, detail="El espacio ya está ocupado en ese rango horario")
 
-    ocupacion = Ocupacion(**data.model_dump())
-    espacio.estado = EstadoEspacio.ocupado
+    ocupacion = Ocupacion(
+        espacio_id=espacio.id,
+        chapa=data.chapa,
+        inicio_reserva=data.inicio_reserva,
+        duracion_prevista_hs=data.duracion_prevista_hs,
+    )
+
     db.add(ocupacion)
     db.commit()
     db.refresh(ocupacion)
+    ocupacion.espacio = espacio
+    _poblar_calle_numero(ocupacion)
     return ocupacion
 
 def finalizar_ocupacion(db: Session, ocupacion_id: int, fin_real: datetime) -> Ocupacion:
@@ -127,37 +147,58 @@ def finalizar_ocupacion(db: Session, ocupacion_id: int, fin_real: datetime) -> O
 
     db.commit()
     db.refresh(ocupacion)
+    _poblar_calle_numero(ocupacion)
     return ocupacion
 
-def obtener_ocupaciones(db: Session, chapa: str | None = None) -> list[Ocupacion]:
+def obtener_ocupaciones(db: Session, chapa: str | None = None, calle: str | None = None) -> list[Ocupacion]:
     query = db.query(Ocupacion)
+    if calle:
+        query = (
+            query
+            .join(Ocupacion.espacio)
+            .join(Espacio.calle)
+            .filter(Calle.nombre.ilike(f"%{calle}%"))
+            .options(contains_eager(Ocupacion.espacio).contains_eager(Espacio.calle))
+        )
+    else:
+        query = query.options(joinedload(Ocupacion.espacio).joinedload(Espacio.calle))
     if chapa:
         query = query.filter(Ocupacion.chapa == chapa.upper())
-    return query.order_by(Ocupacion.inicio_reserva.desc()).all()
+    ocupaciones = query.order_by(Ocupacion.inicio_reserva.desc()).all()
+    for oc in ocupaciones:
+        _poblar_calle_numero(oc)
+    return ocupaciones
 
 
 def obtener_ocupacion(db: Session, ocupacion_id: int) -> Ocupacion:
-    oc = db.query(Ocupacion).filter(Ocupacion.id == ocupacion_id).first()
+    oc = (
+        db.query(Ocupacion)
+        .options(joinedload(Ocupacion.espacio).joinedload(Espacio.calle))
+        .filter(Ocupacion.id == ocupacion_id)
+        .first()
+    )
     if not oc:
         raise HTTPException(status_code=404, detail="Ocupación no encontrada")
+    _poblar_calle_numero(oc)
     return oc
 
-def consultar_disponibles(db: Session, desde: datetime, hasta: datetime) -> list[Espacio]:
-    # Calcula el fin previsto dentro de SQL sumando los minutos al inicio
+def consultar_disponibles(db: Session, desde: datetime, hasta: datetime, calle: str | None = None) -> list[Espacio]:
     fin_previsto_expr = Ocupacion.inicio_reserva + func.make_interval(0, 0, 0, 0, Ocupacion.duracion_prevista_hs, 0, 0)
 
-    # IDs de espacios que tienen solapamiento en el rango pedido
     ids_ocupados = (
         db.query(Ocupacion.espacio_id)
         .filter(
             Ocupacion.fin_real == None,
-            Ocupacion.inicio_reserva < hasta,       # la ocupación empieza antes de que termine el rango
-            fin_previsto_expr > desde,      # la ocupación termina después de que empiece el rango
+            Ocupacion.inicio_reserva < hasta,
+            fin_previsto_expr > desde,
         )
         .distinct()
     )
 
-    return db.query(Espacio).filter(
+    query = db.query(Espacio).filter(
         Espacio.estado != EstadoEspacio.inhabilitado,
         ~Espacio.id.in_(ids_ocupados)
-    ).all()
+    )
+    if calle:
+        query = query.join(Espacio.calle).filter(Calle.nombre.ilike(f"%{calle}%"))
+    return query.all()

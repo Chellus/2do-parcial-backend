@@ -1,6 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel, field_validator
-from app.models.models import EstadoEspacio
+from app.models.models import EstadoEspacio, Calle
 
 class CalleCreate(BaseModel):
     nombre: str
@@ -19,6 +19,8 @@ class CalleOut(BaseModel):
 class EspacioCreate(BaseModel):
     numero: int
     calle_id: int
+    duracion_min_hs: int | None = None
+    duracion_max_hs: int | None = None
 
     @field_validator("numero")
     @classmethod
@@ -29,8 +31,9 @@ class EspacioCreate(BaseModel):
 
 
 class EspacioUpdate(BaseModel):
-    numero: int | None = None
     estado: EstadoEspacio | None = None
+    duracion_min_hs: int | None = None
+    duracion_max_hs: int | None = None
 
 class EspacioOut(BaseModel):
     id: int
@@ -38,8 +41,17 @@ class EspacioOut(BaseModel):
     calle_id: int
     estado: EstadoEspacio
     calle: str
+    duracion_min_hs: int
+    duracion_max_hs: int
 
     model_config = {"from_attributes": True}
+
+    @field_validator("calle", mode="before")
+    @classmethod
+    def convertir_calle(cls, v):
+        if isinstance(v, Calle):
+            return v.nombre
+        return v
 
 class OcupacionCreate(BaseModel):
     calle: str
@@ -61,12 +73,13 @@ class OcupacionFinalizarIn(BaseModel):
 class OcupacionOut(BaseModel):
     id: int
     espacio_id: int
-    patente: str
-    inicio: datetime
-    duracion_minutos: int
+    chapa: str
+    inicio_reserva: datetime
+    duracion_prevista_hs: int
     fin_previsto: datetime
     fin_real: datetime | None
-    espacio: EspacioOut
+    calle: str
+    numero: int
 
     model_config = {"from_attributes": True}
 

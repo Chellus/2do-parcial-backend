@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
@@ -14,8 +14,11 @@ def crear_calle(data: CalleCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/", response_model=list[CalleOut])
-def listar_calles(db: Session = Depends(get_db)):
-    return services.obtener_calles(db)
+def listar_calles(
+    nombre: str | None = Query(default=None, description="Filtrar por nombre de calle"),
+    db: Session = Depends(get_db),
+):
+    return services.obtener_calles(db, nombre)
 
 
 @router.get("/{calle_id}", response_model=CalleOut)

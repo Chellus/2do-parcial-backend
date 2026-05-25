@@ -7,7 +7,6 @@ from app.db.database import Base
 
 class EstadoEspacio(str, enum.Enum):
     disponible = "disponible"
-    ocupado = "ocupado"
     inhabilitado = "inhabilitado"
 
 
@@ -48,7 +47,7 @@ class Ocupacion(Base):
     duracion_prevista_hs: Mapped[int] = mapped_column(Integer, nullable=False)
     fin_real: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
-    espacio: Mapped["Espacio"] = relationship("Calle", back_populates="ocupaciones")
+    espacio: Mapped["Espacio"] = relationship("Espacio", back_populates="ocupaciones")
 
     @property
     def fin_previsto(self) -> datetime:

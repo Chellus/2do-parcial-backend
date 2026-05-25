@@ -16,10 +16,11 @@ def registrar_ocupacion(data: OcupacionCreate, db: Session = Depends(get_db)):
 
 @router.get("/", response_model=list[OcupacionOut])
 def listar_ocupaciones(
-    patente: str | None = Query(default=None, description="Filtrar por patente"),
+    chapa: str | None = Query(default=None, description="Filtrar por chapa"),
+    calle: str | None = Query(default=None, description="Filtrar por nombre de calle"),
     db: Session = Depends(get_db),
 ):
-    return services.obtener_ocupaciones(db, patente)
+    return services.obtener_ocupaciones(db, chapa, calle)
 
 
 @router.get("/{ocupacion_id}", response_model=OcupacionOut)
