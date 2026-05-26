@@ -3,11 +3,11 @@
 -- Ejecutar una vez que las tablas estén creadas (app.main las crea automáticamente).
 
 INSERT INTO calles (nombre) VALUES
-    ('Av. Corrientes'),
-    ('Calle San Martín'),
-    ('Pasaje del Parque'),
-    ('Av. Independencia'),
-    ('Calle 25 de Mayo');
+    ('Avda Nanawa'),
+    ('Los Pinos'),
+    ('Brasilia'),
+    ('Av. España'),
+    ('Avda. Mcal. López');
 
 INSERT INTO espacios (numero, calle_id, duracion_min_hs, duracion_max_hs, estado) VALUES
     -- Av. Corrientes (id=1)
@@ -15,7 +15,7 @@ INSERT INTO espacios (numero, calle_id, duracion_min_hs, duracion_max_hs, estado
     (2,  1, 1, 4,  'disponible'),
     (3,  1, 2, 12, 'disponible'),
     (4,  1, 1, 4,  'inhabilitado'),
-    (5,  1, 1, 24, 'ocupado'),
+    (5,  1, 1, 24, 'disponible'),
     -- Calle San Martín (id=2)
     (1,  2, 1, 8,  'disponible'),
     (2,  2, 1, 8,  'disponible'),
@@ -29,7 +29,7 @@ INSERT INTO espacios (numero, calle_id, duracion_min_hs, duracion_max_hs, estado
     -- Av. Independencia (id=4)
     (1,  4, 1, 12, 'disponible'),
     (2,  4, 1, 12, 'disponible'),
-    (3,  4, 1, 12, 'ocupado'),
+    (3,  4, 1, 12, 'disponible'),
     (4,  4, 1, 12, 'disponible'),
     -- Calle 25 de Mayo (id=5)
     (1,  5, 2, 24, 'disponible'),
